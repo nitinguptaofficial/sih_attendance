@@ -16,6 +16,10 @@ app.use(cors());
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
 
+app.get("/", (req, res) => {
+  res.send("Welcome to the Attendance Management API");
+});
+
 // Make Prisma available in routes
 app.use((req, res, next) => {
   req.prisma = prisma;
