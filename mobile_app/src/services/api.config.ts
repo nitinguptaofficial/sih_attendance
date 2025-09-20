@@ -1,16 +1,12 @@
 import axios from 'axios';
 
-// When testing on Android emulator, use 10.0.2.2 instead of localhost
-// When testing on iOS simulator, use localhost
-// When testing on physical device, use your computer's IP address on the same network
-const API_BASE_URL = 'http://192.168.1.107:5000/api'; // Your backend server URL
+const API_BASE_URL = "http://192.168.1.107:5000/api";
 
 console.log('Using API URL:', API_BASE_URL);
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
     Accept: 'application/json',
   },
   timeout: 30000, // 30 second timeout

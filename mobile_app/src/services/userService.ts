@@ -13,17 +13,18 @@ export const userService = {
       throw error;
     }
   },
-  register: async (userData: {
-    name: string;
-    email: string;
-    role: string;
-    faceDescriptor: string;
-  }) => {
+  register: async (formData: FormData) => {
     try {
-      console.log('Making API request to register user:', userData);
+      console.log('Making API request to register user with form data');
       console.log('API URL:', api.defaults.baseURL + '/users/register');
 
-      const response = await api.post('/users/register', userData);
+      const response = await api.post('/users/register', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Accept: 'application/json',
+        },
+        transformRequest: data => data, // Prevent axios from transforming FormData
+      });
       console.log('API response:', response.data);
       return response.data;
     } catch (error) {

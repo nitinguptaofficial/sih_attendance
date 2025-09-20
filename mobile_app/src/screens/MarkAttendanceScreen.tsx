@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Platform,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Camera,
@@ -45,26 +51,51 @@ const MarkAttendanceScreen = () => {
   };
 
   const handleMarkAttendance = async () => {
-    if (!camera) return;
+    if (!camera) {
+      Toast.show({
+        type: 'error',
+        text1: 'Camera not ready',
+        text2: 'Please wait for camera to initialize',
+      });
+      return;
+    }
 
     setIsLoading(true);
     try {
-      const photo = await camera.takePhoto();
+      // Take photo
+      Toast.show({
+        type: 'info',
+        text1: 'Taking photo...',
+        text2: 'Please stay still',
+        visibilityTime: 1000,
+      });
 
-      // TODO: Implement face detection and recognition using MLKit or a similar library
-      // For now, we'll just simulate the face recognition with the first user
-      if (users.length > 0) {
-        const response = await attendanceService.markAttendance(users[0]._id);
+      const photo = await camera.takePhoto({
+        flash: 'off',
+      });
 
+      // Create form data
+      const formData = new FormData();
+      const photoFile = {
+        uri: Platform.OS === 'ios' ? photo.path : `file://${photo.path}`,
+        type: 'image/jpeg',
+        name: 'photo.jpg',
+      };
+      formData.append('photo', photoFile as any);
+
+      const response = await attendanceService.markAttendance(formData);
+
+      if (response.success) {
         Toast.show({
           type: 'success',
           text1: 'Attendance marked',
-          text2: `Welcome, ${users[0].name}!`,
+          text2: `Welcome, ${response.user.name}!`,
         });
       } else {
         Toast.show({
           type: 'error',
           text1: 'User not recognized',
+          text2: response.message || 'Please try again',
         });
       }
     } catch (error) {

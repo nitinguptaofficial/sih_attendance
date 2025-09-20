@@ -6,6 +6,7 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -62,28 +63,64 @@ const RegisterScreen = () => {
 
     setIsLoading(true);
     try {
-      console.log('Taking photo...');
+      // Step 1: Take photo
+      Toast.show({
+        type: 'info',
+        text1: 'Taking photo...',
+        text2: 'Please stay still',
+        visibilityTime: 1000,
+      });
+
       const photo = await camera.takePhoto({
         flash: 'off',
       });
       console.log('Photo taken:', photo);
 
-      // TODO: Implement face detection using MLKit or a similar library
-      // For now, we'll just simulate the face descriptor
-      const mockFaceDescriptor = new Array(128).fill(0);
+      // Step 2: Create form data
+      Toast.show({
+        type: 'info',
+        text1: 'Processing...',
+        text2: 'Preparing data for registration',
+        visibilityTime: 1000,
+      });
 
       console.log('Sending registration request...', {
         name,
         email,
         role,
+        photoPath: photo.path,
       });
 
-      const response = await userService.register({
+      // Create form data
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('email', email);
+      formData.append('role', role);
+
+      // Add photo as a file
+      const photoFile = {
+        uri: Platform.OS === 'ios' ? photo.path : `file://${photo.path}`,
+        type: 'image/jpeg',
+        name: 'photo.jpg',
+      };
+      formData.append('photo', photoFile as any);
+
+      console.log('Sending form data:', {
         name,
         email,
         role,
-        faceDescriptor: JSON.stringify(mockFaceDescriptor),
+        photoPath: photo.path,
       });
+
+      // Step 3: Send registration request
+      Toast.show({
+        type: 'info',
+        text1: 'Processing...',
+        text2: 'Registering user with face recognition',
+        visibilityTime: 1000,
+      });
+
+      const response = await userService.register(formData);
 
       console.log('Registration response:', response);
 
@@ -99,11 +136,15 @@ const RegisterScreen = () => {
     } catch (error) {
       console.error('Registration error:', error);
 
-      let errorMessage = 'Unknown error occurred';
+      let errorMessage = 'Registration failed';
       if (error instanceof Error) {
         errorMessage = error.message;
-      } else if (typeof error === 'object' && error !== null) {
-        errorMessage = JSON.stringify(error);
+      } else if (
+        typeof error === 'object' &&
+        error !== null &&
+        'message' in error
+      ) {
+        errorMessage = (error as { message: string }).message;
       }
 
       Toast.show({

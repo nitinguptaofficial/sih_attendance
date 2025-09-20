@@ -81,7 +81,7 @@ function MarkAttendance() {
       const match = findBestMatch(detection.descriptor);
 
       if (match && match.distance < 0.6) {
-        const response = await attendanceService.markAttendance(match.user._id);
+        const response = await attendanceService.markAttendance(match.user.id);
 
         if (response) {
           toast({
