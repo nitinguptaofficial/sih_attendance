@@ -97,6 +97,9 @@ const MarkAttendanceScreen = () => {
               style={styles.camera}
               device={device}
               isActive={true}
+              photo={true}
+              video={false}
+              audio={false}
             />
           ) : (
             <Text>No camera device available</Text>

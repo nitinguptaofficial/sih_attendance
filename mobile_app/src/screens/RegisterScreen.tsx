@@ -42,15 +42,41 @@ const RegisterScreen = () => {
   };
 
   const handleRegister = async () => {
-    if (!camera) return;
+    if (!camera) {
+      Toast.show({
+        type: 'error',
+        text1: 'Camera not ready',
+        text2: 'Please wait for camera to initialize',
+      });
+      return;
+    }
+
+    if (!name || !email) {
+      Toast.show({
+        type: 'error',
+        text1: 'Missing information',
+        text2: 'Please fill in all required fields',
+      });
+      return;
+    }
 
     setIsLoading(true);
     try {
-      const photo = await camera.takePhoto();
+      console.log('Taking photo...');
+      const photo = await camera.takePhoto({
+        flash: 'off',
+      });
+      console.log('Photo taken:', photo);
 
       // TODO: Implement face detection using MLKit or a similar library
       // For now, we'll just simulate the face descriptor
       const mockFaceDescriptor = new Array(128).fill(0);
+
+      console.log('Sending registration request...', {
+        name,
+        email,
+        role,
+      });
 
       const response = await userService.register({
         name,
@@ -59,20 +85,31 @@ const RegisterScreen = () => {
         faceDescriptor: JSON.stringify(mockFaceDescriptor),
       });
 
+      console.log('Registration response:', response);
+
       Toast.show({
         type: 'success',
         text1: 'Registration successful',
+        text2: `User ${name} has been registered`,
       });
 
       setName('');
       setEmail('');
       setRole('student');
     } catch (error) {
+      console.error('Registration error:', error);
+
+      let errorMessage = 'Unknown error occurred';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'object' && error !== null) {
+        errorMessage = JSON.stringify(error);
+      }
+
       Toast.show({
         type: 'error',
         text1: 'Registration failed',
-        text2:
-          error instanceof Error ? error.message : 'Unknown error occurred',
+        text2: errorMessage,
       });
     } finally {
       setIsLoading(false);
@@ -97,6 +134,8 @@ const RegisterScreen = () => {
               style={styles.camera}
               device={device}
               isActive={true}
+              photo={true}
+              enableZoomGesture={false}
             />
           ) : (
             <Text>No camera device available</Text>

@@ -18,12 +18,23 @@ const upload = multer({ storage: storage });
 router.post("/register", upload.single("image"), async (req, res) => {
   try {
     const { name, email, faceDescriptor, role } = req.body;
+    
+    let parsedFaceDescriptor;
+    try {
+      parsedFaceDescriptor =
+        typeof faceDescriptor === "string"
+          ? JSON.parse(faceDescriptor)
+          : faceDescriptor;
+    } catch (e) {
+      console.error("Error parsing face descriptor:", e);
+      parsedFaceDescriptor = faceDescriptor;
+    }
 
     const user = await req.prisma.user.create({
       data: {
         name,
         email,
-        faceDescriptor: JSON.parse(faceDescriptor),
+        faceDescriptor: parsedFaceDescriptor,
         role: role.toUpperCase(),
       },
     });
