@@ -3,8 +3,12 @@ import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const HomeScreen = () => {
+  React.useEffect(() => {
+    console.log('HomeScreen mounted');
+  }, []);
+
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.content}>
         <Text style={styles.title}>Face Recognition Attendance System</Text>
         <Text style={styles.description}>
@@ -12,7 +16,7 @@ const HomeScreen = () => {
           navigation below to register new users or mark attendance.
         </Text>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
