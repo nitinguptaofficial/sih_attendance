@@ -5,6 +5,18 @@ const fs = require("fs");
 require("@tensorflow/tfjs-node");
 const { faceapi, canvas, loadModels } = require("../utils/faceApiUtils");
 
+// Helper function to safely cleanup uploaded files
+const cleanupUploadedFile = (filePath) => {
+  if (filePath && fs.existsSync(filePath)) {
+    try {
+      fs.unlinkSync(filePath);
+      console.log(`Successfully cleaned up file: ${filePath}`);
+    } catch (error) {
+      console.error(`Error cleaning up file ${filePath}:`, error);
+    }
+  }
+};
+
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -76,12 +88,12 @@ router.post("/mark", upload.single("photo"), async (req, res) => {
     console.log(`Detected ${detections.length} faces in image`);
 
     if (detections.length === 0) {
-      fs.unlinkSync(req.file.path);
+      cleanupUploadedFile(req.file.path);
       return res.status(400).json({ message: "No face detected in the image" });
     }
 
     if (detections.length > 1) {
-      fs.unlinkSync(req.file.path);
+      cleanupUploadedFile(req.file.path);
       return res.status(400).json({ message: "Multiple faces detected" });
     }
 
@@ -127,7 +139,7 @@ router.post("/mark", upload.single("photo"), async (req, res) => {
     }
 
     if (!matchedUser) {
-      fs.unlinkSync(req.file.path);
+      cleanupUploadedFile(req.file.path);
       return res.status(404).json({ message: "User not recognized" });
     }
 
@@ -164,7 +176,7 @@ router.post("/mark", upload.single("photo"), async (req, res) => {
     });
 
     // Clean up the uploaded file
-    fs.unlinkSync(req.file.path);
+    cleanupUploadedFile(req.file.path);
 
     res.status(201).json({
       success: true,
@@ -175,14 +187,8 @@ router.post("/mark", upload.single("photo"), async (req, res) => {
     console.error("Error marking attendance:", error);
     console.error("Error stack:", error.stack);
 
-    // Clean up uploaded file if it exists
-    if (req.file && req.file.path) {
-      try {
-        fs.unlinkSync(req.file.path);
-      } catch (unlinkError) {
-        console.error("Error cleaning up uploaded file:", unlinkError);
-      }
-    }
+    // Clean up uploaded file
+    cleanupUploadedFile(req.file?.path);
 
     res.status(500).json({
       message: error.message,

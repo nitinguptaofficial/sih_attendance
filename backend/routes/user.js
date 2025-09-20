@@ -5,6 +5,18 @@ const fs = require("fs");
 require("@tensorflow/tfjs-node");
 const { faceapi, canvas, loadModels } = require("../utils/faceApiUtils");
 
+// Helper function to safely cleanup uploaded files
+const cleanupUploadedFile = (filePath) => {
+  if (filePath && fs.existsSync(filePath)) {
+    try {
+      fs.unlinkSync(filePath);
+      console.log(`Successfully cleaned up file: ${filePath}`);
+    } catch (error) {
+      console.error(`Error cleaning up file ${filePath}:`, error);
+    }
+  }
+};
+
 // Set up multer for file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -49,6 +61,7 @@ router.post("/register", upload.single("photo"), async (req, res) => {
       role === null ||
       role === undefined
     ) {
+      cleanupUploadedFile(req.file?.path);
       return res
         .status(400)
         .json({ message: "Name, email, and role are required" });
@@ -135,14 +148,8 @@ router.post("/register", upload.single("photo"), async (req, res) => {
     console.error("Error registering user:", error);
     console.error("Stack trace:", error.stack);
 
-    // Clean up uploaded file if it exists
-    if (req.file && req.file.path) {
-      try {
-        fs.unlinkSync(req.file.path);
-      } catch (unlinkError) {
-        console.error("Error cleaning up uploaded file:", unlinkError);
-      }
-    }
+    // Clean up uploaded file
+    cleanupUploadedFile(req.file?.path);
 
     // Send a more detailed error response
     res.status(500).json({
